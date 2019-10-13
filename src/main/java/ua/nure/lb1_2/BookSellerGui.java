@@ -1,4 +1,4 @@
-package ua.nure.lb1;
+package ua.nure.lb1_2;
 
 import javax.swing.*;
 import java.awt.*;
