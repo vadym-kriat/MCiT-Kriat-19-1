@@ -51,9 +51,10 @@ public class SpeleologistAgent extends Agent {
 
     private class WampusWorldFinder extends Behaviour {
         private int step = 0;
+
         @Override
         public void action() {
-            if (step == 0){
+            if (step == 0) {
                 DFAgentDescription template = new DFAgentDescription();
                 ServiceDescription sd = new ServiceDescription();
                 sd.setType(WAMPUS_WORLD_TYPE);
@@ -76,6 +77,7 @@ public class SpeleologistAgent extends Agent {
                 }
             }
         }
+
         @Override
         public boolean done() {
             return step == 1;
@@ -95,7 +97,7 @@ public class SpeleologistAgent extends Agent {
                     cfp.addReceiver(wampusWorld);
                     cfp.setContent(GO_INSIDE);
                     cfp.setConversationId(WORLD_DIGGER_CONVERSATION_ID);
-                    cfp.setReplyWith("cfp"+System.currentTimeMillis());
+                    cfp.setReplyWith("cfp" + System.currentTimeMillis());
                     myAgent.send(cfp);
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId(WORLD_DIGGER_CONVERSATION_ID),
                             MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
@@ -109,13 +111,13 @@ public class SpeleologistAgent extends Agent {
                             myAgent.addBehaviour(new NavigatorAgentPerformer());
                             step = 2;
                         }
-                    }
-                    else {
+                    } else {
                         block();
                     }
                     break;
             }
         }
+
         @Override
         public boolean done() {
             return step == 2;
@@ -156,7 +158,7 @@ public class SpeleologistAgent extends Agent {
                     order.addReceiver(navigationAgent);
                     order.setContent(currentWorldState);
                     order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
-                    order.setReplyWith("order"+System.currentTimeMillis());
+                    order.setReplyWith("order" + System.currentTimeMillis());
                     myAgent.send(order);
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID),
                             MessageTemplate.MatchInReplyTo(order.getReplyWith()));
@@ -167,24 +169,20 @@ public class SpeleologistAgent extends Agent {
                     if (reply != null) {
                         if (reply.getPerformative() == ACLMessage.PROPOSE) {
                             String actions = reply.getContent();
-                            actions = actions.substring(1, actions.length()-1);
+                            actions = actions.substring(1, actions.length() - 1);
                             String[] instructions = actions.split(", ");
-                            if (instructions.length == 1){
+                            if (instructions.length == 1) {
                                 sendTakeGoldMessage();
-                            }
-                            else if (instructions.length == 2 && Objects.equals(instructions[1], actionCodes.get(SHOOT_ARROW))){
+                            } else if (instructions.length == 2 && Objects.equals(instructions[1], actionCodes.get(SHOOT_ARROW))) {
                                 sendShootMessage(instructions[0]);
-                            }
-                            else if (instructions.length == 2 && Objects.equals(instructions[1], actionCodes.get(MOVE))){
+                            } else if (instructions.length == 2 && Objects.equals(instructions[1], actionCodes.get(MOVE))) {
                                 sendMoveMessage(instructions[0]);
-                            }
-                            else {
+                            } else {
                                 System.out.println("ERROR ACTIONS");
                             }
                             ++step;
                         }
-                    }
-                    else {
+                    } else {
                         block();
                     }
                     break;
@@ -195,8 +193,7 @@ public class SpeleologistAgent extends Agent {
                     if (reply != null) {
                         currentWorldState = reply.getContent();
                         step = 1;
-                    }
-                    else {
+                    } else {
                         block();
                     }
                     break;
@@ -211,6 +208,7 @@ public class SpeleologistAgent extends Agent {
         private void sendShootMessage(String instruction) {
             sendActionMessage(SHOOT_ARROW, instruction);
         }
+
         private void sendTakeGoldMessage() {
             sendActionMessage(TAKE_GOLD, "Take");
         }
@@ -224,7 +222,7 @@ public class SpeleologistAgent extends Agent {
             order.addReceiver(wampusWorld);
             order.setContent(instruction);
             order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
-            order.setReplyWith("order"+System.currentTimeMillis());
+            order.setReplyWith("order" + System.currentTimeMillis());
             myAgent.send(order);
             mt = MessageTemplate.and(MessageTemplate.MatchConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID),
                     MessageTemplate.MatchInReplyTo(order.getReplyWith()));
