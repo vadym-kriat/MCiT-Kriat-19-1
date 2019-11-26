@@ -32,7 +32,7 @@ public class SpeleologistAgent extends Agent {
         put(TAKE_GOLD, "take");
     }};
 
-    public static String GO_INSIDE = "go_inside";
+    public static String GO_INSIDE = "go-inside";
     public static String WAMPUS_WORLD_TYPE = "wampus-world";
     public static String NAVIGATOR_AGENT_TYPE = "navigator-agent";
 
@@ -60,7 +60,7 @@ public class SpeleologistAgent extends Agent {
                 template.addServices(sd);
                 try {
                     DFAgentDescription[] result = DFService.search(myAgent, template);
-                    if (result != null && result.length > 0) {
+                    if (result.length > 0) {
                         wampusWorld = result[0].getName();
                         myAgent.addBehaviour(new WampusWorldPerformer());
                         ++step;
@@ -81,10 +81,12 @@ public class SpeleologistAgent extends Agent {
             return step == 1;
         }
     }
-    private class WampusWorldPerformer extends Behaviour {
-        private MessageTemplate mt;
 
+    private class WampusWorldPerformer extends Behaviour {
+
+        private MessageTemplate mt;
         private int step = 0;
+
         @Override
         public void action() {
             switch (step) {
@@ -103,8 +105,7 @@ public class SpeleologistAgent extends Agent {
                     ACLMessage reply = myAgent.receive(mt);
                     if (reply != null) {
                         if (reply.getPerformative() == ACLMessage.CONFIRM) {
-                            String answer = reply.getContent();
-                            currentWorldState = answer;
+                            currentWorldState = reply.getContent();
                             myAgent.addBehaviour(new NavigatorAgentPerformer());
                             step = 2;
                         }
@@ -120,9 +121,12 @@ public class SpeleologistAgent extends Agent {
             return step == 2;
         }
     }
+
     private class NavigatorAgentPerformer extends Behaviour {
+
         private int step = 0;
         private MessageTemplate mt;
+
         @Override
         public void action() {
             switch (step) {
@@ -133,7 +137,7 @@ public class SpeleologistAgent extends Agent {
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
-                        if (result != null && result.length > 0) {
+                        if (result.length > 0) {
                             navigationAgent = result[0].getName();
                             ++step;
                         } else {
@@ -198,33 +202,25 @@ public class SpeleologistAgent extends Agent {
                     break;
             }
         }
+
         @Override
         public boolean done() {
             return step == 4;
         }
 
         private void sendShootMessage(String instruction) {
-            ACLMessage order = new ACLMessage(SHOOT_ARROW);
-            order.addReceiver(wampusWorld);
-            order.setContent(instruction);
-            order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
-            order.setReplyWith("order"+System.currentTimeMillis());
-            myAgent.send(order);
-            mt = MessageTemplate.and(MessageTemplate.MatchConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID),
-                    MessageTemplate.MatchInReplyTo(order.getReplyWith()));
+            sendActionMessage(SHOOT_ARROW, instruction);
         }
         private void sendTakeGoldMessage() {
-            ACLMessage order = new ACLMessage(TAKE_GOLD);
-            order.addReceiver(wampusWorld);
-            order.setContent("Take");
-            order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
-            order.setReplyWith("order"+System.currentTimeMillis());
-            myAgent.send(order);
-            mt = MessageTemplate.and(MessageTemplate.MatchConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID),
-                    MessageTemplate.MatchInReplyTo(order.getReplyWith()));
+            sendActionMessage(TAKE_GOLD, "Take");
         }
+
         private void sendMoveMessage(String instruction) {
-            ACLMessage order = new ACLMessage(MOVE);
+            sendActionMessage(MOVE, instruction);
+        }
+
+        private void sendActionMessage(int action, String instruction) {
+            ACLMessage order = new ACLMessage(action);
             order.addReceiver(wampusWorld);
             order.setContent(instruction);
             order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
