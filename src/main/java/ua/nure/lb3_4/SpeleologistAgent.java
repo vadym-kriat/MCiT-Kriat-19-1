@@ -10,7 +10,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import java.util.Objects;
+import java.util.*;
 
 public class SpeleologistAgent extends Agent {
 
@@ -22,7 +22,7 @@ public class SpeleologistAgent extends Agent {
     public static int MOVE = 4;
     public static int SHOOT_ARROW = 5;
     public static int TAKE_GOLD = 6;
-    public static java.util.HashMap<Integer, String> actionCodes = new java.util.HashMap<Integer, String>() {{
+    public static HashMap<Integer, String> actionCodes = new HashMap<Integer, String>() {{
         put(LOOK_RIGHT, "right");
         put(LOOK_LEFT, "left");
         put(LOOK_UP, "up");
@@ -42,11 +42,43 @@ public class SpeleologistAgent extends Agent {
     private int arrowCount = 1;
     private AID wampusWorld;
     private AID navigationAgent;
-    private String currentWorldState = "";
+    private String roomDescription = "";
+
+    private Map<String, List<String>> expressions;
+    private Random random = new Random();
 
     @Override
     protected void setup() {
+        expressions = new HashMap<>();
+        expressions.put(NavigatorAgent.BREEZE, Arrays.asList("I feel breeze here", "There is a breeze"));
+        expressions.put(NavigatorAgent.PIT, Arrays.asList("I see a pit!", "There is a pit there"));
+        expressions.put(NavigatorAgent.STENCH, Arrays.asList("I smell stench", "There is some stench in that room"));
+        expressions.put(NavigatorAgent.WAMPUS, Arrays.asList("I see wampus!!!", "Oh, wampus is coming!!", "I think, wampus might be here"));
+        expressions.put(NavigatorAgent.GOLD, Arrays.asList("I see golden spot", "I think, gold might be here"));
+        expressions.put(NavigatorAgent.BUMP, Collections.singletonList("Oh, bump!"));
+
         addBehaviour(new WampusWorldFinder());
+    }
+
+    private String roomDescriptionToExpressions(String roomDescription) {
+        if (roomDescription.isEmpty()) {
+            return roomDescription;
+        }
+
+        String[] props = roomDescription.split(",");
+        StringBuilder sb = new StringBuilder();
+        for (String prop : props) {
+            List<String> availableExpressions = expressions.get(prop);
+            if (availableExpressions == null || availableExpressions.isEmpty()) {
+                sb.append(prop);
+            } else {
+                int randomPosition = random.nextInt(availableExpressions.size());
+                sb.append(availableExpressions.get(randomPosition));
+            }
+            sb.append(".");
+        }
+
+        return sb.toString();
     }
 
     private class WampusWorldFinder extends Behaviour {
@@ -107,7 +139,7 @@ public class SpeleologistAgent extends Agent {
                     ACLMessage reply = myAgent.receive(mt);
                     if (reply != null) {
                         if (reply.getPerformative() == ACLMessage.CONFIRM) {
-                            currentWorldState = reply.getContent();
+                            roomDescription = reply.getContent();
                             myAgent.addBehaviour(new NavigatorAgentPerformer());
                             step = 2;
                         }
@@ -156,7 +188,7 @@ public class SpeleologistAgent extends Agent {
                 case 1: {
                     ACLMessage order = new ACLMessage(ACLMessage.INFORM);
                     order.addReceiver(navigationAgent);
-                    order.setContent(currentWorldState);
+                    order.setContent(roomDescriptionToExpressions(roomDescription));
                     order.setConversationId(NAVIGATOR_DIGGER_CONVERSATION_ID);
                     order.setReplyWith("order" + System.currentTimeMillis());
                     myAgent.send(order);
@@ -191,7 +223,7 @@ public class SpeleologistAgent extends Agent {
                 case 3:
                     ACLMessage reply = myAgent.receive(mt);
                     if (reply != null) {
-                        currentWorldState = reply.getContent();
+                        roomDescription = reply.getContent();
                         step = 1;
                     } else {
                         block();

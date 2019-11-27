@@ -72,15 +72,16 @@ public class WampusWorldAgent extends Agent {
         this.wampusMap[0][1] = new Room(BREEZE);
         this.wampusMap[0][2] = new Room(PIT);
         this.wampusMap[0][3] = new Room(BREEZE);
-        this.wampusMap[1][0] = new Room(WAMPUS, STENCH);
+        this.wampusMap[1][0] = new Room(STENCH);
         this.wampusMap[1][3] = new Room(BREEZE);
-        this.wampusMap[2][0] = new Room(STENCH);
-        this.wampusMap[2][1] = new Room(BREEZE);
+        this.wampusMap[2][0] = new Room(WAMPUS, STENCH);
+        this.wampusMap[2][1] = new Room(BREEZE, STENCH, GOLD);
         this.wampusMap[2][2] = new Room(PIT);
         this.wampusMap[2][3] = new Room(BREEZE);
         this.wampusMap[3][0] = new Room(STENCH);
-        this.wampusMap[3][2] = new Room(BREEZE, STENCH, GOLD);
+        this.wampusMap[3][2] = new Room(BREEZE);
         this.wampusMap[3][3] = new Room(PIT);
+
         for (int i = 0; i < this.wampusMap.length; i++) {
             for (int j = 0; j < this.wampusMap[i].length; j++) {
                 if (this.wampusMap[i][j] == null) {
@@ -117,7 +118,7 @@ public class WampusWorldAgent extends Agent {
                     }
                     ACLMessage reply = msg.createReply();
                     reply.setPerformative(ACLMessage.CONFIRM);
-                    reply.setContent(wampusMap[0][0].events.toString());
+                    reply.setContent(wampusMap[0][0].getRoomDescription());
                     myAgent.send(reply);
                 }
             } else {
@@ -206,11 +207,9 @@ public class WampusWorldAgent extends Agent {
                 if (row > -1 && column > -1 && row < NUM_OF_ROWS && column < NUM_OF_COLUMNS) {
                     Speleologist_coords.column = column;
                     Speleologist_coords.row = row;
-                    reply.setContent(wampusMap[row][column].events.toString());
+                    reply.setContent(wampusMap[row][column].getRoomDescription());
                 } else {
-                    reply.setContent(String.valueOf(new ArrayList<String>() {{
-                        add(NavigatorAgent.BUMP);
-                    }}));
+                    reply.setContent(NavigatorAgent.BUMP);
                 }
                 myAgent.send(reply);
             } else {
@@ -250,6 +249,18 @@ class Room {
         for (int i : args) {
             events.add(WampusWorldAgent.roomCodes.get(i));
         }
+    }
+
+    public String getRoomDescription() {
+        if (events.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String event : events) {
+            sb.append(event).append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
     }
 }
 

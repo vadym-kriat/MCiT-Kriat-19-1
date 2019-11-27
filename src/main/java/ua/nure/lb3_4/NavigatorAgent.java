@@ -23,6 +23,8 @@ public class NavigatorAgent extends Agent {
     public static final String GOLD = "gold";
     public static final String BUMP = "bump";
 
+    private String[] props = new String[] {"start", "wampus", "pit", "breeze", "stench", "scream", "gold", "bump"};
+
     public static int ROOM_STATUS_TRUE = 1;
     public static int ROOM_STATUS_FALSE = 2;
     public static int ROOM_STATUS_POSSIBLE = 3;
@@ -89,8 +91,7 @@ public class NavigatorAgent extends Agent {
                     agents_coords.put(request_agent, request_agent_position);
                 }
                 String location = msg.getContent();
-                location = location.substring(1, location.length() - 1);
-                String[] room_info = location.split(", ");
+                String[] room_info = getRoomInfo(location);
                 System.out.println("ROOM INFO: " + Arrays.toString(room_info));
                 System.out.println("AGENT INFO: " + request_agent_position.getX() + " " + request_agent_position.getY());
                 String[] actions = getActions(request_agent, request_agent_position, room_info);
@@ -103,6 +104,22 @@ public class NavigatorAgent extends Agent {
                 block();
             }
         }
+    }
+
+    private String[] getRoomInfo(String text) {
+        List<String> description = new ArrayList<>();
+
+        String[] expressions = text.split("\\.");
+        for (String expression : expressions) {
+            for (String prop : props) {
+                if (expression.contains(prop)) {
+                    description.add(prop);
+                }
+            }
+        }
+
+        String[] res = new String[description.size()];
+        return description.toArray(res);
     }
 
     private String[] getActions(AID request_agent, Position request_agent_position, String[] room_info) {
